@@ -71,7 +71,13 @@ reproduces that study's headline exactly (−109.7%) and then shows the effect s
 **below its own detection threshold** of 121%. Prism's limitations section had already
 conceded it was "underpowered for its own primary metric." This puts a number on it.
 
-**4. A weak judge halves your statistical power — a strong one costs nothing.**
+**4. Judge error is mostly a harness defect — and cannot be prompted away.**
+The 3B judge's 73% false-negative rate came largely from being shown `7425.0` against
+`7425`. Normalising the format cut it to **26.7%**; *telling* the model to ignore
+formatting changed nothing (75.0%). Corrected, a weak judge costs ~17% in minimum
+detectable effect and a 70B judge costs nothing — against the 2× originally reported.
+
+**5. A weak judge halves your statistical power — a strong one costs nothing.**
 Re-scoring the runs with a 3B judge: run-to-run *variance* is exactly zero at
 temperature 0, but *error* marks **73% of correct answers wrong**, removes 70% of all
 successes, and **doubles the minimum detectable effect** (209% → 421%, matching the √n
@@ -79,21 +85,21 @@ law) while barely moving the estimate. The same protocol with a 70B judge: **2.1
 negatives**, successes preserved. What matters is not the error rate but its
 **symmetry** — one-directional error eats the denominator; symmetric error cancels.
 
-**5. The error never goes away, and difficulty costs precision.**
+**6. The error never goes away, and difficulty costs precision.**
 Sweeping the success rate: naive coverage climbs from 15% to 68% as evaluations get
 easier, but **never reaches adequacy** — there is no threshold above which the shortcut
 is safe. Meanwhile the minimum detectable effect falls from **128% at a 10% success rate
 to 21% at 95%**. A harder benchmark does not just score lower; it loses the ability to
 measure changes to itself.
 
-**6. The mechanism confirms on a second corpus.**
+**7. The mechanism confirms on a second corpus.**
 The same suite scored by a 70B model at a 94% success rate: the success-rate share of
 variance falls from 81% to 16%, exactly as the simulation predicts, and the naive
 interval's narrowness tracks what it omits (88% omitted → 81% narrow; 41% omitted → 44%
 narrow). In one cell where every attempt succeeded, the ratio corrections vanish
 entirely — and the interval is *still* 26% too narrow, from clustering alone.
 
-**7. A budget rule for designing evaluations.**
+**8. A budget rule for designing evaluations.**
 At fixed budget, a within-task paired design's standard error is flat in replicates per
 task, while an independent design's nearly doubles. So paired designs can trade tasks
 for replicates freely; independent designs must maximise task count.
@@ -197,6 +203,7 @@ analysis/decompose_run.py          CLI: decompose a real results file
 analysis/design_sweep.py           paired vs independent design comparison
 analysis/success_rate_sweep.py     how the error depends on the success rate
 analysis/plan_eval.py              how many tasks you need, before you run
+analysis/ablate_judge_prompt.py    how much judge error is the prompt, not the model
 analysis/judge_arm.py              re-judge existing runs with an LLM
 analysis/judge_analysis.py         judge error, variance, and factor dependence
 ```

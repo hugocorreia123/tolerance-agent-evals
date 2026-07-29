@@ -410,6 +410,56 @@ cell from 10 judged successes to 11. At that cell size one verdict is a 10% swin
 denominator, so the movement is noise rather than bias. The analysis script originally
 flagged it as material; it now scales that alarm to the smallest success count involved.
 
+### 5.5 Most of the judge error was a harness defect
+
+§5.4 attributed the 3B judge's 73% false-negative rate to model weakness. Inspecting
+what the judge was actually shown undermines that. On every successful GSM8K attempt it
+compared:
+
+```
+Reference answer: 7425.0
+Submitted answer: 7425
+```
+
+`expected` is stored as a float; `got` is the model's raw string. A small model asked
+"is the submitted answer correct?" sees two strings that differ and says no. That is a
+presentation defect in this harness, not a reasoning failure in the model.
+
+An ablation over four variants — same 60 successes and 60 failures, same model, same
+temperature — measures how much:
+
+| Variant | False-negative rate |
+|---|---|
+| **baseline** (what §5.1 ran) | 73.3% |
+| **normalised** (`7425.0` rendered as `7425`) | **26.7%** |
+| **tolerant** (baseline, prompt permits formatting differences) | 75.0% |
+| **bare** (no question text, pure numeric comparison) | 73.3% |
+
+**64% of the false-negative rate was my harness.** The two negative results matter as
+much as the positive one: instructing the model to ignore formatting did nothing (75.0%,
+marginally worse), and removing the question text did nothing (73.3%). **A weak model
+cannot be prompted out of a presentation defect — only the data presentation fixes it.**
+
+The residual is real and model-dependent, and it revises the power cost accordingly:
+
+| | FN rate | Successes retained | MDE multiplier |
+|---|---|---|---|
+| Baseline presentation, 3B judge | 73.0% | 152 → 41 | **×1.92** |
+| Normalised presentation, 3B judge | 26.7% | 152 → 111 | ×1.17 |
+| 70B judge | 2.1% | 152 → 149 | ×1.01 |
+
+**The final form of the Stage 1 finding:**
+
+> Judge error costs statistical power through the denominator, but most of what looked
+> like judge error here was a defect in how the comparison was posed. Corrected, a weak
+> judge costs roughly 17% in minimum detectable effect and a strong one costs nothing.
+> The original 2× figure measured this harness, not LLM judging.
+
+This is the third revision of the same finding — 2× for LLM judges, then 2× for *weak*
+judges only, then ×1.17 once the harness defect was removed. Each revision came from
+more data or closer inspection, and each made the claim smaller. That pattern is the
+subject of this report, and it applies to this report.
+
 ---
 
 ## 6. What to do with this
@@ -430,10 +480,16 @@ point estimate implies a precision that does not exist.
 **Prefer a within-task design** — and if you have one, allocate budget between tasks
 and replicates however is convenient.
 
-**Check your judge before trusting it, and prefer a strong one.** A 3B judge lost 70%
-of all successes and doubled the MDE; a 70B judge on the same protocol lost none. What
-matters is not the error rate alone but its **symmetry** — one-directional error eats
-the denominator, symmetric error largely cancels.
+**Inspect what your judge is actually shown before blaming the model.** Two-thirds of
+the false-negative rate here came from comparing `7425.0` against `7425`. Normalise
+values on both sides of the comparison.
+
+**Do not expect a prompt instruction to fix it.** Telling a weak model that formatting
+differences do not matter changed nothing; only changing the presentation did.
+
+**Prefer a strong judge, and check error symmetry.** One-directional error eats the
+denominator; symmetric error largely cancels. After correcting presentation, a 3B judge
+costs ~17% in MDE and a 70B judge costs nothing.
 
 **Do not repeat-run a judge at temperature 0.** It is deterministic; the repetitions
 measure nothing.
@@ -476,11 +532,11 @@ python3 analysis/plan_eval.py --table
 
 ## 7. Limits
 
-**Two judges, one prompt.** Judge behaviour is prompt-sensitive and no prompt ablation
-was run, so the rates belong to these judges with this prompt. The model-size question
-that this limitation originally raised has since been answered directly in §5.4: the
-asymmetry, not the error rate, is what drives the power loss, and it disappears with a
-stronger judge.
+**Two judges, four prompt variants.** The model-size and prompt-sensitivity questions
+this limitation originally raised are answered in §5.4 and §5.5. What remains untested:
+whether the residual 26.7% for the 3B judge falls further under presentations not tried
+here, and whether the 70B judge's 2.1% is itself partly presentation-robustness rather
+than judging skill — it may simply normalise `7425.0` silently where the 3B cannot.
 
 **Low power in §5.3.** With 152 successes the factor tests could not resolve differences
 below roughly 25 pp. Absence of evidence there is not evidence of absence.
