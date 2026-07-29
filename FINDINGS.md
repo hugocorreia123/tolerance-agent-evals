@@ -1,4 +1,4 @@
-# Tolerance — Stage 0 Findings
+# Tolerance — Findings
 
 ## Can your agent evaluation detect the improvement you are claiming?
 
@@ -30,6 +30,14 @@ A design sweep adds a budget rule: in a within-task paired design the standard e
 is **flat** in replicates per task, while an independent design's standard error
 **nearly doubles** over the same range — so paired designs can trade tasks for
 replicates freely, and independent designs must maximise task count.
+
+**Stage 1** removes the assumption that judging is objective. Re-scoring the same 640
+attempts with an LLM judge shows judge *variance* is exactly **zero** at temperature 0,
+while judge *error* removes **70% of all successes** (73% false-negative rate, 0.8%
+false-positive). The point estimate barely moves — 13.4 percentage points — but the
+**minimum detectable effect exactly doubles**, from 209% to 421%, matching the √n law.
+An LLM judge does not change what you conclude; it halves your ability to conclude
+anything.
 
 ---
 
@@ -125,7 +133,7 @@ Everything in this report runs on a laptop with **no third-party dependencies**.
 
 ---
 
-## 4. Results
+## 4. Stage 0 — the variance of a ratio
 
 ### 4.1 A nominal 95% interval achieves 39% coverage
 
@@ -227,7 +235,78 @@ dataset, which is the wrong comparison — the practitioner's question is betwee
 
 ---
 
-## 5. What to do with this
+## 5. Stage 1 — what an LLM judge costs
+
+Stage 0's stated limitation was that both suites judge objectively, so judge variance
+is zero by construction and the results might not transfer to LLM-as-judge evaluation —
+which is how most agent systems are scored.
+
+**The trajectories were already spent.** Prism records `expected`, `got` and the
+objective verdict for every attempt, so testing this required no agent re-runs, only
+re-judging. All 640 GSM8K attempts were re-scored by a local Qwen2.5-3B judge at
+temperature 0.
+
+### 5.1 Judge variance is zero; judge error is not
+
+| Quantity | Result |
+|---|---|
+| Judge variance (run-to-run flips) | **0 / 640 = 0.0%** |
+| False negatives (correct answers marked wrong) | **111 / 152 = 73.0%** |
+| False positives (wrong answers marked correct) | 4 / 488 = 0.8% |
+
+At temperature 0 the judge is deterministic, so repeated judging measures nothing. An
+initial run used k=3 repetitions; they were wasted compute. **Judge variance is only
+observable at temperature > 0, and practitioners run judges at temperature 0.** The
+live risk is error, and the two are routinely conflated.
+
+The error is severely asymmetric: the judge marks nearly three-quarters of correct
+answers wrong, and almost never does the reverse.
+
+### 5.2 The cost is paid in power, not in the estimate
+
+Successes fall from **152 to 45** — 70% removed. The headline contrast:
+
+| | RTW | T_off | T_on | **MDE** |
+|---|---|---|---|---|
+| Objective judge | −109.7% | 4,305 | 9,026 | **209%** |
+| LLM judge | −96.3% | 11,957 | 23,469 | **421%** |
+
+**The point estimate moves 13.4 percentage points. The MDE exactly doubles (2.01×).**
+
+That is not coincidence and it is not bias. Because the judge's error is roughly uniform
+across cells, it largely cancels in a ratio of ratios. What it destroys is effective
+sample size: successes fell 3.38×, and MDE scales as 1/√n, predicting 1.84× against
+2.01× observed.
+
+> An LLM judge does not change what you conclude. It halves your ability to conclude
+> anything.
+
+This follows directly from Stage 0: the success count is the dominant variance term, so
+anything that removes successes inflates the MDE.
+
+### 5.3 Does judge error track the experimental condition?
+
+If judge error correlated with a manipulated factor it would be a **confound** rather
+than noise — creating or erasing effects instead of blurring them. Tested per factor,
+conditional on actual success (errors are only possible where a success occurred):
+
+| Factor | FN rate at 0 | FN rate at 1 | Difference | p | 95% CI |
+|---|---|---|---|---|---|
+| S (schema) | 67.4% | 80.3% | 12.9 pp | 0.101 | [−1, +27] pp |
+| B (budget) | 75.0% | 70.8% | 4.2 pp | 0.587 | [−19, +10] pp |
+| L (language) | 72.6% | 73.5% | 0.9 pp | 1.000 | [−14, +14] pp |
+
+Suggestive evidence for S; not established. B and L show nothing.
+
+**This estimate is itself a lesson.** A 200-attempt subsample run first gave S a
+difference of **27.4 pp at p = 0.056** — an apparently strong effect that shrank to 12.9
+pp with an interval spanning zero once all 640 attempts were used. That is the classic
+underpowered overestimate, occurring in a study whose entire subject is underpowered
+estimates. It is reported here rather than quietly replaced.
+
+---
+
+## 6. What to do with this
 
 **Report a cluster-bootstrap interval, not a naive one.** The correction is cheap and
 the error it removes is large.
@@ -245,14 +324,25 @@ point estimate implies a precision that does not exist.
 **Prefer a within-task design** — and if you have one, allocate budget between tasks
 and replicates however is convenient.
 
+**If you score with an LLM judge, expect to lose most of your statistical power.** A
+73% false-negative rate doubled the MDE here. Budget for it, or use an objective judge
+wherever the task admits one.
+
+**Do not repeat-run a judge at temperature 0.** It is deterministic; the repetitions
+measure nothing.
+
 ---
 
-## 6. Limits
+## 7. Limits
 
-**Objective judges only.** Both suites judge deterministically, so judge variance is
-zero here. Most production agent evaluations use an LLM judge, which adds a variance
-component this analysis does not measure and cannot bound. Results should not be
-assumed to transfer to judge-based evaluation.
+**The judge arm uses one judge and one prompt.** Judge behaviour is prompt-sensitive
+and model-sensitive; no ablation was run. The 73% false-negative rate is a property of
+this 3B judge with this prompt, not of LLM judging in general. A stronger judge would
+presumably err less; whether it would err *symmetrically* is untested, and the
+asymmetry is what drives the power loss.
+
+**Low power in §5.3.** With 152 successes the factor tests could not resolve differences
+below roughly 25 pp. Absence of evidence there is not evidence of absence.
 
 **One study's data, one model family.** The empirical section analyses a single
 848-run corpus on Qwen2.5-3B. The direction and mechanism should generalise — they
@@ -267,12 +357,12 @@ approximation. At the very low success counts seen in the BFCL cells, that
 approximation is itself strained — a limitation that argues for the same conclusion as
 §4.3.
 
-**This is Stage 0.** It establishes the method and applies it to existing data. It
-does not yet include a judge-variance arm or an empirical replicate sweep.
+**No empirical replicate sweep.** §4.5 is simulated; a paired-versus-independent
+comparison on real runs has not been done.
 
 ---
 
-## 7. Reproducing
+## 8. Reproducing
 
 ```bash
 # validate the estimators against known ground truth
@@ -283,10 +373,15 @@ python3 analysis/decompose_run.py results/<run>.jsonl
 
 # paired vs independent design comparison
 python3 analysis/design_sweep.py
+
+# judge arm (the only part needing a model backend)
+python3 analysis/judge_arm.py RESULTS.jsonl SUITE.json --model mlx --k 1
+python3 analysis/judge_analysis.py results/judge/<file>.jsonl
 ```
 
-No third-party packages are required — the statistics use only the Python standard
-library, so the analysis runs anywhere Python does. All simulations are
+No third-party packages are required for the statistics — they use only the Python
+standard library, so the analysis runs anywhere Python does. Only the judge arm needs a
+model backend (`mlx-lm`, or any substitute). All simulations are
 deterministically seeded and reproduce byte-identically.
 
 ---
@@ -333,6 +428,25 @@ Variance shares:
 | S1B1L1 | 2 | 685,812 | 78,769 | 507,052 | 213,886 | 63% | 124% |
 
 Success-rate share of variance ranges from 87.1% to 94.5% across these cells.
+
+### A.3 Judge arm, per cell (80 attempts per cell)
+
+| Cell | Objective successes | Judged successes | Marginal error rate |
+|---|---|---|---|
+| S0B0L0 | 25 | 9 | 20.0% |
+| S0B0L1 | 19 | 5 | 17.5% |
+| S0B1L0 | 24 | 8 | 22.5% |
+| S0B1L1 | 18 | 8 | 15.0% |
+| S1B0L0 | 22 | 4 | 22.5% |
+| S1B0L1 | 14 | 2 | 15.0% |
+| S1B1L0 | 13 | 5 | 15.0% |
+| S1B1L1 | 17 | 4 | 16.2% |
+| **Total** | **152** | **45** | 18.0% |
+
+The marginal error rate is shown for completeness but is misleading: errors are only
+possible on attempts that actually succeeded, so it is diluted by the 488 failures the
+judge classifies correctly by default. The conditional rates in §5.1 are the
+informative ones.
 
 ---
 
