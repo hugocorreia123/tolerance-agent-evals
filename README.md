@@ -84,7 +84,14 @@ is safe. Meanwhile the minimum detectable effect falls from **128% at a 10% succ
 to 21% at 95%**. A harder benchmark does not just score lower; it loses the ability to
 measure changes to itself.
 
-**6. A budget rule for designing evaluations.**
+**6. The mechanism confirms on a second corpus.**
+The same suite scored by a 70B model at a 94% success rate: the success-rate share of
+variance falls from 81% to 16%, exactly as the simulation predicts, and the naive
+interval's narrowness tracks what it omits (88% omitted → 81% narrow; 41% omitted → 44%
+narrow). In one cell where every attempt succeeded, the ratio corrections vanish
+entirely — and the interval is *still* 26% too narrow, from clustering alone.
+
+**7. A budget rule for designing evaluations.**
 At fixed budget, a within-task paired design's standard error is flat in replicates per
 task, while an independent design's nearly doubles. So paired designs can trade tasks
 for replicates freely; independent designs must maximise task count.

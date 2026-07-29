@@ -266,6 +266,45 @@ anything short of a doubling.
 This also explains why Stage 0's real-data MDEs are so large: the study analysed runs
 at 16–31% success rates, which sits at the punishing end of this curve.
 
+### 4.7 A second corpus confirms the mechanism
+
+§4.6 is simulation. The same study provides an empirical test at the opposite end of
+the curve: its M2 arm ran the identical suite on Llama-3.3-70B at a **94% success rate**
+against M1's 31%.
+
+| | M1 · Qwen2.5-3B | M2 · Llama-3.3-70B |
+|---|---|---|
+| Success rate | ~31% | ~94% |
+| Success-rate share of variance | **81%** | **16%** |
+| Covariance share | +7% | +25% |
+| Token share | 6–17% | 31–100% |
+| Naive interval too narrow by | **81%** | **44%** |
+| MDE (as measured) | 121–222% | 87–197% |
+
+The simulation predicted a success-rate share of 69% at p = 30% and 20% at p = 95%. The
+observed values are 81% and 16%. The mechanism transfers.
+
+**The composition inverts, but the error does not disappear.** At low success rates the
+success-rate term dominates; at high rates token variance and covariance do. What the
+naive estimator omits predicts how wrong it is almost exactly:
+
+| | Omitted variance | Interval too narrow by |
+|---|---|---|
+| M1 | 7% + 81% = **88%** | 81% |
+| M2 | 25% + 16% = **41%** | 44% |
+
+**The MDE comparison is confounded by sample size** and should not be read directly: M2
+has 13 attempts per cell against M1's 80, a √(80/13) = 2.48× penalty. Adjusted to equal
+n, M2's MDE would be roughly **35–79%** against M1's 121–222% — so a high success rate
+roughly halves to thirds the detectable effect, consistent with §4.6.
+
+**A degenerate cell completes the argument.** In M2's S1B1L1 every attempt succeeded
+(12/12), so the success-rate variance is exactly zero and the covariance vanishes: the
+ratio estimator collapses to a simple mean and the naive standard error equals the delta
+standard error exactly (303 = 303). Yet the cluster bootstrap still returns 407 — **26%
+wider**. Even when both ratio corrections vanish, clustering remains. There are three
+things the naive treatment ignores, and at no operating point are all three absent.
+
 ---
 
 ## 5. Stage 1 — what an LLM judge costs
