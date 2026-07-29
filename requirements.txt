@@ -1,0 +1,27 @@
+# Tolerance dependencies.
+#
+# The statistics need NOTHING. Every estimator, bootstrap, permutation
+# test and simulation in analysis/ uses only the Python standard library
+# (statistics.NormalDist covers the quantiles), so the core of this
+# repository runs anywhere Python 3.9+ runs, with no install step.
+#
+#   python3 analysis/validate_ratio_variance.py     <- no install needed
+#   python3 analysis/decompose_run.py FILE.jsonl    <- no install needed
+#   python3 analysis/design_sweep.py                <- no install needed
+#   python3 analysis/success_rate_sweep.py          <- no install needed
+#   python3 analysis/plan_eval.py --table           <- no install needed
+#
+# Only the judge arm calls a model, and only it needs anything below.
+# Install whichever backend you intend to use; neither is required to
+# reproduce any statistical result in FINDINGS.md.
+
+# --- local judge, Apple Silicon -------------------------------------
+# analysis/judge_arm.py --model mlx
+mlx-lm>=0.14 ; platform_system == "Darwin" and platform_machine == "arm64"
+
+# --- hosted judge -----------------------------------------------------
+# analysis/judge_arm.py --model groq   (needs GROQ_API_KEY)
+# Note the free tier's daily token cap: ~450 judge calls per day at this
+# prompt size. The runner paces against the per-minute budget and aborts
+# cleanly when the daily quota is gone, leaving a usable partial file.
+groq>=1.0
