@@ -403,6 +403,40 @@ wherever the task admits one.
 **Do not repeat-run a judge at temperature 0.** It is deterministic; the repetitions
 measure nothing.
 
+### How big does your evaluation need to be?
+
+Inverting the analysis gives the question worth asking before spending compute rather
+than after. Tasks required to detect a given change in cost per success, at 2 attempts
+per task per condition and 80% power:
+
+| Success rate | detect 10% | 20% | 30% | 50% | 100% |
+|---|---|---|---|---|---|
+| 10% | >4000 | 2,521 | 1,128 | 409 | 103 |
+| 30% | >4000 | 880 | 395 | 140 | 38 |
+| 50% | 2,031 | 508 | 226 | 83 | 22 |
+| 70% | 1,224 | 305 | 137 | 51 | 13 |
+| 95% | 362 | **91** | 43 | 13 | 5 |
+
+Read a column downward and the same claim gets **28× cheaper** as the success rate rises
+from 10% to 95%. Read a row rightward and a coarser claim gets cheaper just as fast.
+
+The uncomfortable comparison: agentic cost-efficiency improvements are routinely
+published in the **10–40%** range, and typical agentic suites hold **100–500 tasks**. At a
+30% success rate, a 30% claim needs 395 tasks, a 20% claim needs 880, and a 10% claim is
+out of reach at any suite size a research team would build.
+
+`>4000` is a real answer rather than a missing one: it says the claim cannot be
+supported, not that more data would help.
+
+For calibration, the study analysed here used 40 tasks at a ~31% success rate. The table
+puts that at roughly a 100% detectable effect; the measured value was 121–222%. The
+planner is the optimistic bound.
+
+```bash
+python3 analysis/plan_eval.py --target 0.20 --success-rate 0.30
+python3 analysis/plan_eval.py --table
+```
+
 ---
 
 ## 7. Limits
@@ -445,6 +479,9 @@ python3 analysis/decompose_run.py results/<run>.jsonl
 
 # paired vs independent design comparison
 python3 analysis/design_sweep.py
+
+# how many tasks would you need?
+python3 analysis/plan_eval.py --table
 
 # judge arm (the only part needing a model backend)
 python3 analysis/judge_arm.py RESULTS.jsonl SUITE.json --model mlx --k 1

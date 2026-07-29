@@ -110,6 +110,30 @@ for replicates freely; independent designs must maximise task count.
 
 ---
 
+## How big does your evaluation need to be?
+
+Tasks required to detect a given change in cost per success (2 attempts per task per
+condition, 80% power):
+
+| Success rate | detect 10% | 20% | 30% | 50% | 100% |
+|---|---|---|---|---|---|
+| 10% | >4000 | 2,521 | 1,128 | 409 | 103 |
+| 30% | >4000 | 880 | 395 | 140 | 38 |
+| 50% | 2,031 | 508 | 226 | 83 | 22 |
+| 70% | 1,224 | 305 | 137 | 51 | 13 |
+| 95% | 362 | **91** | 43 | 13 | 5 |
+
+Published agentic cost improvements cluster in the **10–40%** range; typical suites hold
+**100–500 tasks**. At a 30% success rate a 20% claim needs 880 tasks, and a 10% claim is
+out of reach at any size a team would build.
+
+```bash
+python3 analysis/plan_eval.py --target 0.20 --success-rate 0.30
+python3 analysis/plan_eval.py --table
+```
+
+---
+
 ## The method
 
 For *n* attempts with tokens *tᵢ* and outcomes *sᵢ* ∈ {0,1}, the metric is
@@ -170,6 +194,7 @@ analysis/validate_ratio_variance.py  coverage validation against known truth
 analysis/decompose_run.py          CLI: decompose a real results file
 analysis/design_sweep.py           paired vs independent design comparison
 analysis/success_rate_sweep.py     how the error depends on the success rate
+analysis/plan_eval.py              how many tasks you need, before you run
 analysis/judge_arm.py              re-judge existing runs with an LLM
 analysis/judge_analysis.py         judge error, variance, and factor dependence
 ```
