@@ -99,7 +99,13 @@ interval's narrowness tracks what it omits (88% omitted → 81% narrow; 41% omit
 narrow). In one cell where every attempt succeeded, the ratio corrections vanish
 entirely — and the interval is *still* 26% too narrow, from clustering alone.
 
-**8. A budget rule for designing evaluations.**
+**8. The MDE formula itself is optimistic.**
+Every MDE here comes from a normal approximation. Measured against simulated power, it
+understates the detectable effect by **1.66× to over 3.7×**, worst where successes are
+scarce. So the reported figures are lower bounds on the difficulty — the real situation
+is worse than the numbers say, not better.
+
+**9. A budget rule for designing evaluations.**
 At fixed budget, a within-task paired design's standard error is flat in replicates per
 task, while an independent design's nearly doubles. So paired designs can trade tasks
 for replicates freely; independent designs must maximise task count.
@@ -204,6 +210,7 @@ analysis/design_sweep.py           paired vs independent design comparison
 analysis/success_rate_sweep.py     how the error depends on the success rate
 analysis/plan_eval.py              how many tasks you need, before you run
 analysis/ablate_judge_prompt.py    how much judge error is the prompt, not the model
+analysis/mde_simulation.py         is the MDE formula trustworthy? (no)
 analysis/judge_arm.py              re-judge existing runs with an LLM
 analysis/judge_analysis.py         judge error, variance, and factor dependence
 ```

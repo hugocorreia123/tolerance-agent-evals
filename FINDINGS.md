@@ -305,6 +305,44 @@ standard error exactly (303 = 303). Yet the cluster bootstrap still returns 407 
 wider**. Even when both ratio corrections vanish, clustering remains. There are three
 things the naive treatment ignores, and at no operating point are all three absent.
 
+### 4.8 The MDE formula is itself optimistic
+
+Every minimum detectable effect above comes from the closed form
+`MDE = (z_α + z_β)·√2·SE / T`, which assumes the estimator is approximately normal. For
+a ratio whose denominator is a small count of successes, that assumption is doing real
+work. §7 flagged it as a limitation; this measures it.
+
+Ground truth here is the definition of power rather than another formula: plant a true
+effect, simulate the entire procedure, and count how often the interval actually
+excludes zero.
+
+| Success rate | Successes per cell | Closed form | Measured by simulation | Ratio |
+|---|---|---|---|---|
+| 10% | 8 | 162% | ≥600% | ≥3.7× |
+| 20% | 16 | 102% | **419%** | **4.13×** |
+| 30% | 24 | 84% | 198% | 2.35× |
+| 50% | 40 | 63% | 106% | 1.66× |
+| 30% (13 tasks) | 8 | 187% | ≥600% | ≥3.2× |
+| 15% (13 tasks) | 4 | 284% | ≥600% | ≥2.1× |
+
+**The closed form is optimistic everywhere, and worst where successes are scarce.** Rows
+marked ≥ never reached 80% power at any effect size searched, so they are lower bounds.
+
+This cuts in the conservative direction: **every MDE reported in §4.3, §4.6 and §5
+understates how hard detection really is.** At the operating point closest to the real
+data (30% success, 40 tasks) the true detectable effect is 2.35× the stated one, which
+would move the GSM8K range from 121–222% to roughly 285–520%.
+
+The consequence for §4.4 is that the re-audit was too kind. Prism's −109.7% was reported
+as sitting just below a 121% threshold; against a simulated threshold it is not close to
+detectable at all.
+
+The exact multipliers belong to this generating process and should not be applied
+mechanically to other suites. What transfers is the direction and the reason: a ratio
+with a small random denominator is skewed, and a symmetric normal interval built on it
+is too short. Where successes per cell fall below roughly 20, the closed form should be
+treated as a lower bound on the difficulty and the simulation run instead.
+
 ---
 
 ## 5. Stage 1 — what an LLM judge costs
@@ -573,6 +611,9 @@ python3 analysis/design_sweep.py
 
 # how many tasks would you need?
 python3 analysis/plan_eval.py --table
+
+# is the MDE formula trustworthy at your success rate?
+python3 analysis/mde_simulation.py
 
 # judge arm (the only part needing a model backend)
 python3 analysis/judge_arm.py RESULTS.jsonl SUITE.json --model mlx --k 1
