@@ -241,8 +241,20 @@ def main():
         shift = abs(b[0] - a[0])
         print(f"\nheadline contrast moves by {100*shift:.1f} percentage points "
               f"when judged by an LLM.")
-        if shift > abs(a[0]) * 0.25:
+        # A shift means little without knowing how few verdicts drive it.
+        # With a handful of successes per cell, ONE flipped verdict moves
+        # the denominator several percent — so scale the alarm to the
+        # smallest success count involved rather than to the shift alone.
+        min_succ = min(sum(int(majority(r["judge_verdicts"])) for r in rs)
+                       for rs in by_cell.values())
+        one_verdict = 1.0 / max(min_succ, 1)
+        if shift > abs(a[0]) * 0.25 and shift > 3 * one_verdict:
             print("  *** That is a material change to the reported result.")
+        elif shift > abs(a[0]) * 0.25:
+            print(f"  The shift looks large in relative terms, but the "
+                  f"smallest cell holds only {min_succ} judged successes, "
+                  f"where a\n  single flipped verdict moves the metric by "
+                  f"~{100*one_verdict:.0f}%. Treat it as noise, not bias.")
     else:
         print("\n(headline contrast not computable — too few successes in a "
               "required cell)")

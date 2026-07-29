@@ -376,6 +376,40 @@ pp with an interval spanning zero once all 640 attempts were used. That is the c
 underpowered overestimate, occurring in a study whose entire subject is underpowered
 estimates. It is reported here rather than quietly replaced.
 
+### 5.4 Judge quality changes the answer entirely
+
+§5.1–5.3 used a local 3B judge. The limits section flagged the obvious question: is a
+73% false-negative rate a property of LLM judging, or of a *small* LLM judging? Running
+the same protocol with Llama-3.3-70B on 448 attempts answers it.
+
+| | Qwen2.5-3B | Llama-3.3-70B |
+|---|---|---|
+| False-negative rate | **73.0%** (111/152) | **2.1%** (2/95) |
+| False-positive rate | 0.8% (4/488) | 0.9% (3/352) |
+| Error symmetry | one-directional | roughly symmetric |
+| Successes preserved | 152 → 45 (**−70%**) | 95 → 96 (**+1%**) |
+| Judge variance at T=0 | 0% | 0% |
+
+**The claim in §5.2 was too broad.** "An LLM judge halves your statistical power" holds
+for a weak judge and not for a competent one. The 70B judge is 35× more accurate, and —
+more importantly — its errors are *symmetric*: 2.1% against 0.9%, so they largely cancel
+in the success count rather than draining it. Since the power loss is caused by the
+denominator shrinking, symmetric error is nearly free even at the same nominal rate.
+
+The corrected finding:
+
+> A **weak** judge halves your statistical power, because its error is one-directional
+> and eats the denominator. A **competent** judge costs almost nothing. Judge quality
+> is not a matter of degree here — it changes whether the measurement survives.
+
+Two caveats on this comparison. The runs used different sample sizes (640 versus 448
+attempts, the latter capped by free-tier quota), so the false-negative *rates* are
+comparable but the MDE figures are not directly. And the 70B run's headline contrast
+moved 14 percentage points — a shift driven by a **single** false positive taking one
+cell from 10 judged successes to 11. At that cell size one verdict is a 10% swing in the
+denominator, so the movement is noise rather than bias. The analysis script originally
+flagged it as material; it now scales that alarm to the smallest success count involved.
+
 ---
 
 ## 6. What to do with this
@@ -396,9 +430,10 @@ point estimate implies a precision that does not exist.
 **Prefer a within-task design** — and if you have one, allocate budget between tasks
 and replicates however is convenient.
 
-**If you score with an LLM judge, expect to lose most of your statistical power.** A
-73% false-negative rate doubled the MDE here. Budget for it, or use an objective judge
-wherever the task admits one.
+**Check your judge before trusting it, and prefer a strong one.** A 3B judge lost 70%
+of all successes and doubled the MDE; a 70B judge on the same protocol lost none. What
+matters is not the error rate alone but its **symmetry** — one-directional error eats
+the denominator, symmetric error largely cancels.
 
 **Do not repeat-run a judge at temperature 0.** It is deterministic; the repetitions
 measure nothing.
@@ -441,11 +476,11 @@ python3 analysis/plan_eval.py --table
 
 ## 7. Limits
 
-**The judge arm uses one judge and one prompt.** Judge behaviour is prompt-sensitive
-and model-sensitive; no ablation was run. The 73% false-negative rate is a property of
-this 3B judge with this prompt, not of LLM judging in general. A stronger judge would
-presumably err less; whether it would err *symmetrically* is untested, and the
-asymmetry is what drives the power loss.
+**Two judges, one prompt.** Judge behaviour is prompt-sensitive and no prompt ablation
+was run, so the rates belong to these judges with this prompt. The model-size question
+that this limitation originally raised has since been answered directly in §5.4: the
+asymmetry, not the error rate, is what drives the power loss, and it disappears with a
+stronger judge.
 
 **Low power in §5.3.** With 152 successes the factor tests could not resolve differences
 below roughly 25 pp. Absence of evidence there is not evidence of absence.

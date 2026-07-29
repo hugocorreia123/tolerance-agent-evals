@@ -27,6 +27,7 @@ merely blurring them — a confound, not noise.
 import argparse
 import json
 import random
+import re
 import sys
 import time
 from pathlib import Path
@@ -83,6 +84,89 @@ class MLXJudge:
         return None          # unparseable — recorded, never guessed
 
 
+class GroqRateLimitExhausted(RuntimeError):
+    """Daily quota gone, as opposed to a per-minute throttle. Distinct so
+    the run stops cleanly with a usable partial file instead of grinding
+    out errors for hours."""
+
+
+class GroqJudge:
+    """Hosted judge via Groq. Paces PROACTIVELY against a rolling
+    tokens-per-minute budget rather than reacting to 429s — a lesson
+    imported from the Prism harness, where reactive retrying against a
+    TPM ceiling wasted a day of quota.
+    """
+
+    def __init__(self, model_id="llama-3.3-70b-versatile", temperature=0.0,
+                 tpm_budget=12000, safety=0.85):
+        import os
+        from groq import Groq
+        self.client = Groq(api_key=os.environ["GROQ_API_KEY"], max_retries=0)
+        self.name = model_id
+        self.model_id = model_id
+        self.temperature = temperature
+        self.budget = tpm_budget * safety
+        self._window = []
+
+    def _pace(self, est):
+        while True:
+            now = time.time()
+            self._window = [(t, n) for t, n in self._window if now - t < 60]
+            used = sum(n for _, n in self._window)
+            if used + est <= self.budget or not self._window:
+                return
+            oldest = min(t for t, _ in self._window)
+            time.sleep(max(1.0, 60 - (now - oldest) + 0.5))
+
+    def verdict(self, question, expected, got, truth=None):
+        from groq import RateLimitError
+        prompt = JUDGE_PROMPT.format(question=question, expected=expected,
+                                     got=got)
+        self._pace(len(prompt) // 3 + 8)
+        for attempt in range(4):
+            try:
+                r = self.client.chat.completions.create(
+                    model=self.model_id,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=6, temperature=self.temperature)
+                u = r.usage
+                self._window.append((time.time(),
+                                     u.prompt_tokens + u.completion_tokens))
+                up = (r.choices[0].message.content or "").strip().upper()
+                return True if up.startswith("YES") else (
+                    False if up.startswith("NO") else None)
+            except RateLimitError as e:
+                wait = _retry_after(e) or 20 * (attempt + 1)
+                if wait > 600:
+                    raise GroqRateLimitExhausted(
+                        f"daily quota exhausted (implied wait {wait:.0f}s). "
+                        f"Partial results already written are usable; rerun "
+                        f"tomorrow with a smaller --limit.") from e
+                time.sleep(wait)
+                self._window.clear()
+        raise RuntimeError("groq: rate-limited beyond retries")
+
+
+def _retry_after(exc):
+    """Use the wait the API actually reports rather than guessing."""
+    resp = getattr(exc, "response", None)
+    if resp is not None:
+        v = (getattr(resp, "headers", {}) or {}).get("retry-after")
+        if v:
+            try:
+                return float(v)
+            except ValueError:
+                pass
+    m = re.search(r"try again in ([0-9hms.\s]+)", str(exc))
+    if not m:
+        return None
+    total, found = 0.0, False
+    for val, unit in re.findall(r"([0-9]*\.?[0-9]+)\s*([hms])", m.group(1)):
+        found = True
+        total += float(val) * {"h": 3600, "m": 60, "s": 1}[unit]
+    return total if found else None
+
+
 def load_attempts(path: Path):
     out = []
     for line in path.read_text().splitlines():
@@ -112,7 +196,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("results_file")
     ap.add_argument("suite_file")
-    ap.add_argument("--model", default="mock", choices=["mock", "mlx"])
+    ap.add_argument("--model", default="mock",
+                    choices=["mock", "mlx", "groq"])
     ap.add_argument("--model-id",
                     default="mlx-community/Qwen2.5-3B-Instruct-4bit")
     ap.add_argument("--k", type=int, default=3,
@@ -140,8 +225,15 @@ def main():
         attempts = [x for v in by_cell.values()
                     for x in rng.sample(v, min(per, len(v)))]
 
-    judge = (MockJudge() if args.model == "mock"
-             else MLXJudge(args.model_id, args.temperature))
+    if args.model == "mock":
+        judge = MockJudge()
+    elif args.model == "mlx":
+        judge = MLXJudge(args.model_id, args.temperature)
+    else:
+        gid = (args.model_id if args.model_id !=
+               "mlx-community/Qwen2.5-3B-Instruct-4bit"
+               else "llama-3.3-70b-versatile")
+        judge = GroqJudge(gid, args.temperature)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -153,7 +245,8 @@ def main():
     print(f"judge             : {judge.name} @ T={args.temperature}")
     print(f"writing           : {out_path}\n")
 
-    with out_path.open("w") as f:
+    try:
+      with out_path.open("w") as f:
         f.write(json.dumps({"type": "judge_manifest", "judge": judge.name,
                             "temperature": args.temperature, "k": args.k,
                             "source_results": str(args.results_file),
@@ -176,8 +269,14 @@ def main():
                 "judge_verdicts": verdicts,
                 "tok_total": a["tok_in_total"] + a["tok_out_total"],
             }) + "\n")
+            f.flush()
             if i % 25 == 0 or i == len(attempts):
                 print(f"  [{i}/{len(attempts)}]")
+
+    except GroqRateLimitExhausted as e:
+        print(f"\n{'='*58}\nSTOPPED: {e}\n{'='*58}")
+        print(f"partial results usable at {out_path}")
+        sys.exit(0)
 
     print(f"\ndone -> {out_path}")
     print("analyse with: python3 analysis/judge_analysis.py "

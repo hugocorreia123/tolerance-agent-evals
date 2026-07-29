@@ -71,11 +71,13 @@ reproduces that study's headline exactly (−109.7%) and then shows the effect s
 **below its own detection threshold** of 121%. Prism's limitations section had already
 conceded it was "underpowered for its own primary metric." This puts a number on it.
 
-**4. An LLM judge halves your statistical power without changing your answer.**
-Re-scoring all 640 attempts with an LLM judge: run-to-run judge *variance* is exactly
-zero at temperature 0, but judge *error* marks 73% of correct answers wrong and removes
-70% of all successes. The point estimate moves 13 percentage points; the minimum
-detectable effect **exactly doubles**, 209% → 421%, matching the √n law.
+**4. A weak judge halves your statistical power — a strong one costs nothing.**
+Re-scoring the runs with a 3B judge: run-to-run *variance* is exactly zero at
+temperature 0, but *error* marks **73% of correct answers wrong**, removes 70% of all
+successes, and **doubles the minimum detectable effect** (209% → 421%, matching the √n
+law) while barely moving the estimate. The same protocol with a 70B judge: **2.1% false
+negatives**, successes preserved. What matters is not the error rate but its
+**symmetry** — one-directional error eats the denominator; symmetric error cancels.
 
 **5. The error never goes away, and difficulty costs precision.**
 Sweeping the success rate: naive coverage climbs from 15% to 68% as evaluations get
