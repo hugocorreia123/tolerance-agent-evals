@@ -233,6 +233,39 @@ pairing bought nothing at all. That comparison was between two *estimators* on o
 dataset, which is the wrong comparison — the practitioner's question is between two
 *designs* at fixed budget. The corrected experiment reversed the finding.
 
+### 4.6 The error shrinks with success rate but never disappears
+
+Section 4.1 measured coverage at one operating point. Because the dominant term scales
+as `T²·p(1−p)` and `T ~ 1/p`, both factors shrink as evaluations get easier — so the
+naive omission should matter less at high success rates. Sweeping the success rate
+locates how much less:
+
+| Success rate | Naive coverage | Delta coverage | Success-rate share of variance | Correct SE vs naive | MDE |
+|---|---|---|---|---|---|
+| 10% | **15%** | 93% | 88% | 10.40× | 128% |
+| 20% | 22% | 92% | 78% | 6.47× | 80% |
+| 30% | 33% | 94% | 69% | 4.70× | 63% |
+| 50% | 39% | 92% | 51% | 3.08× | 46% |
+| 70% | 58% | 93% | 36% | 2.27× | 37% |
+| 85% | 64% | 89% | 26% | 1.86× | 28% |
+| 95% | **68%** | 88% | 20% | 1.59× | 21% |
+
+**There is no threshold above which the naive interval becomes acceptable.** It
+improves monotonically and still reaches only 68% coverage at a 95% success rate — the
+easiest regime that exists. The correction is not situational.
+
+The second consequence is larger. **The minimum detectable effect falls from 128% to
+21% purely as a function of success rate.** At 95% success an evaluation can resolve
+the 10–40% improvements practitioners actually report; at 10% success it cannot resolve
+anything short of a doubling.
+
+> Difficulty and precision are coupled through the same denominator. Making a benchmark
+> harder does not merely lower the scores — it destroys the ability to measure changes
+> to them.
+
+This also explains why Stage 0's real-data MDEs are so large: the study analysed runs
+at 16–31% success rates, which sits at the punishing end of this curve.
+
 ---
 
 ## 5. Stage 1 — what an LLM judge costs

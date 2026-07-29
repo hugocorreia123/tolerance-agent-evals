@@ -77,7 +77,14 @@ zero at temperature 0, but judge *error* marks 73% of correct answers wrong and 
 70% of all successes. The point estimate moves 13 percentage points; the minimum
 detectable effect **exactly doubles**, 209% → 421%, matching the √n law.
 
-**5. A budget rule for designing evaluations.**
+**5. The error never goes away, and difficulty costs precision.**
+Sweeping the success rate: naive coverage climbs from 15% to 68% as evaluations get
+easier, but **never reaches adequacy** — there is no threshold above which the shortcut
+is safe. Meanwhile the minimum detectable effect falls from **128% at a 10% success rate
+to 21% at 95%**. A harder benchmark does not just score lower; it loses the ability to
+measure changes to itself.
+
+**6. A budget rule for designing evaluations.**
 At fixed budget, a within-task paired design's standard error is flat in replicates per
 task, while an independent design's nearly doubles. So paired designs can trade tasks
 for replicates freely; independent designs must maximise task count.
@@ -90,6 +97,7 @@ for replicates freely; independent designs must maximise task count.
 - **Check your MDE before claiming an improvement.** If the suite cannot resolve 100%, a claimed 20% saving is not evidence.
 - **Watch the denominator.** Effort spent on token-measurement precision addresses 1–17% of the variance. Raising the success count, or adding tasks, addresses the rest.
 - **Below ~3 successes per cell, do not report the metric.** It is not estimable, and a point value implies precision that does not exist.
+- **If you need to detect small improvements, you need a high success rate.** Difficulty and precision are coupled through the same denominator.
 - **If you use an LLM judge, budget for the power loss** — or use an objective judge wherever the task admits one.
 - **Never repeat-run a judge at temperature 0.** It is deterministic; the repetitions measure nothing.
 
@@ -132,6 +140,9 @@ python3 analysis/decompose_run.py results/<run>.jsonl
 # paired vs independent design comparison
 python3 analysis/design_sweep.py
 
+# how naive error depends on the success rate
+python3 analysis/success_rate_sweep.py
+
 # judge arm — the only part that needs a model backend
 python3 analysis/judge_arm.py RESULTS.jsonl SUITE.json --model mlx --k 1
 python3 analysis/judge_analysis.py results/judge/<file>.jsonl
@@ -151,6 +162,7 @@ analysis/ratio_variance.py         delta-method decomposition, cluster bootstrap
 analysis/validate_ratio_variance.py  coverage validation against known truth
 analysis/decompose_run.py          CLI: decompose a real results file
 analysis/design_sweep.py           paired vs independent design comparison
+analysis/success_rate_sweep.py     how the error depends on the success rate
 analysis/judge_arm.py              re-judge existing runs with an LLM
 analysis/judge_analysis.py         judge error, variance, and factor dependence
 ```
