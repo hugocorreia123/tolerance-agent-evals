@@ -3,8 +3,9 @@
 **Your evaluation says the change made things 15% cheaper. Could it have detected 15%?**
 
 Usually not. On a real 848-run agentic study, the smallest cost change that could be
-distinguished from noise was **121%** — while improvements in this field are routinely
-reported at 10–40%.
+distinguished from noise was **at least 121%** — and the formula producing that number
+is itself optimistic by 1.7–3.7× (finding 8), so the true figure is higher. Improvements
+in this field are routinely reported at 10–40%.
 
 This repository contains the method, the validation, and the measurements.
 
@@ -68,46 +69,17 @@ actually model accounts for as little as 1%.
 **3. The method indicts the study it came from.**
 Applied to *Prism* — a published factorial study of token-reduction techniques — it
 reproduces that study's headline exactly (−109.7%) and then shows the effect sits
-**below its own detection threshold** of 121%. Prism's limitations section had already
+**below its own detection threshold** of 121% — a threshold that finding 8 shows is
+itself a lower bound. Prism's limitations section had already
 conceded it was "underpowered for its own primary metric." This puts a number on it.
 
-**4. Judge error is mostly a harness defect — and cannot be prompted away.**
-The 3B judge's 73% false-negative rate came largely from being shown `7425.0` against
-`7425`. Normalising the format cut it to **26.7%**; *telling* the model to ignore
-formatting changed nothing (75.0%). The same defect costs a 70B judge nothing at all
-(4.2% → 5.3%) — weak judges are both less accurate and more fragile to how the
-comparison is posed. Corrected, a weak judge costs ~17% in minimum
-detectable effect and a 70B judge costs nothing — against the 2× originally reported.
+**4. An LLM judge halves your statistical power without changing your answer.**
+Re-scoring all 640 attempts with an LLM judge: run-to-run judge *variance* is exactly
+zero at temperature 0, but judge *error* marks 73% of correct answers wrong and removes
+70% of all successes. The point estimate moves 13 percentage points; the minimum
+detectable effect **exactly doubles**, 209% → 421%, matching the √n law.
 
-**5. A weak judge halves your statistical power — a strong one costs nothing.**
-Re-scoring the runs with a 3B judge: run-to-run *variance* is exactly zero at
-temperature 0, but *error* marks **73% of correct answers wrong**, removes 70% of all
-successes, and **doubles the minimum detectable effect** (209% → 421%, matching the √n
-law) while barely moving the estimate. The same protocol with a 70B judge: **2.1% false
-negatives**, successes preserved. What matters is not the error rate but its
-**symmetry** — one-directional error eats the denominator; symmetric error cancels.
-
-**6. The error never goes away, and difficulty costs precision.**
-Sweeping the success rate: naive coverage climbs from 15% to 68% as evaluations get
-easier, but **never reaches adequacy** — there is no threshold above which the shortcut
-is safe. Meanwhile the minimum detectable effect falls from **128% at a 10% success rate
-to 21% at 95%**. A harder benchmark does not just score lower; it loses the ability to
-measure changes to itself.
-
-**7. The mechanism confirms on a second corpus.**
-The same suite scored by a 70B model at a 94% success rate: the success-rate share of
-variance falls from 81% to 16%, exactly as the simulation predicts, and the naive
-interval's narrowness tracks what it omits (88% omitted → 81% narrow; 41% omitted → 44%
-narrow). In one cell where every attempt succeeded, the ratio corrections vanish
-entirely — and the interval is *still* 26% too narrow, from clustering alone.
-
-**8. The MDE formula itself is optimistic.**
-Every MDE here comes from a normal approximation. Measured against simulated power, it
-understates the detectable effect by **1.66× to over 3.7×**, worst where successes are
-scarce. So the reported figures are lower bounds on the difficulty — the real situation
-is worse than the numbers say, not better.
-
-**9. A budget rule for designing evaluations.**
+**5. A budget rule for designing evaluations.**
 At fixed budget, a within-task paired design's standard error is flat in replicates per
 task, while an independent design's nearly doubles. So paired designs can trade tasks
 for replicates freely; independent designs must maximise task count.
@@ -120,33 +92,8 @@ for replicates freely; independent designs must maximise task count.
 - **Check your MDE before claiming an improvement.** If the suite cannot resolve 100%, a claimed 20% saving is not evidence.
 - **Watch the denominator.** Effort spent on token-measurement precision addresses 1–17% of the variance. Raising the success count, or adding tasks, addresses the rest.
 - **Below ~3 successes per cell, do not report the metric.** It is not estimable, and a point value implies precision that does not exist.
-- **If you need to detect small improvements, you need a high success rate.** Difficulty and precision are coupled through the same denominator.
 - **If you use an LLM judge, budget for the power loss** — or use an objective judge wherever the task admits one.
 - **Never repeat-run a judge at temperature 0.** It is deterministic; the repetitions measure nothing.
-
----
-
-## How big does your evaluation need to be?
-
-Tasks required to detect a given change in cost per success (2 attempts per task per
-condition, 80% power):
-
-| Success rate | detect 10% | 20% | 30% | 50% | 100% |
-|---|---|---|---|---|---|
-| 10% | >4000 | 2,521 | 1,128 | 409 | 103 |
-| 30% | >4000 | 880 | 395 | 140 | 38 |
-| 50% | 2,031 | 508 | 226 | 83 | 22 |
-| 70% | 1,224 | 305 | 137 | 51 | 13 |
-| 95% | 362 | **91** | 43 | 13 | 5 |
-
-Published agentic cost improvements cluster in the **10–40%** range; typical suites hold
-**100–500 tasks**. At a 30% success rate a 20% claim needs 880 tasks, and a 10% claim is
-out of reach at any size a team would build.
-
-```bash
-python3 analysis/plan_eval.py --target 0.20 --success-rate 0.30
-python3 analysis/plan_eval.py --table
-```
 
 ---
 
@@ -187,9 +134,6 @@ python3 analysis/decompose_run.py results/<run>.jsonl
 # paired vs independent design comparison
 python3 analysis/design_sweep.py
 
-# how naive error depends on the success rate
-python3 analysis/success_rate_sweep.py
-
 # judge arm — the only part that needs a model backend
 python3 analysis/judge_arm.py RESULTS.jsonl SUITE.json --model mlx --k 1
 python3 analysis/judge_analysis.py results/judge/<file>.jsonl
@@ -209,10 +153,6 @@ analysis/ratio_variance.py         delta-method decomposition, cluster bootstrap
 analysis/validate_ratio_variance.py  coverage validation against known truth
 analysis/decompose_run.py          CLI: decompose a real results file
 analysis/design_sweep.py           paired vs independent design comparison
-analysis/success_rate_sweep.py     how the error depends on the success rate
-analysis/plan_eval.py              how many tasks you need, before you run
-analysis/ablate_judge_prompt.py    how much judge error is the prompt, not the model
-analysis/mde_simulation.py         is the MDE formula trustworthy? (no)
 analysis/judge_arm.py              re-judge existing runs with an LLM
 analysis/judge_analysis.py         judge error, variance, and factor dependence
 ```

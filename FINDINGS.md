@@ -173,8 +173,12 @@ inflates rather than cancels.
 
 | Suite | MDE range (80% power) |
 |---|---|
-| GSM8K | 121% – 222% |
-| BFCL | 116% – 403% |
+| GSM8K | ≥ 121% – 222% |
+| BFCL | ≥ 116% – 403% |
+
+These are **lower bounds**. §4.8 measures the closed form producing them against
+simulated power and finds it optimistic by 1.66× to over 3.7×, worsening as successes
+grow scarce.
 
 An improvement smaller than this cannot be distinguished from noise by this suite. For
 context, published agentic cost-efficiency improvements are routinely reported in the
@@ -232,116 +236,6 @@ A note on how this result arrived: an earlier version of this analysis concluded
 pairing bought nothing at all. That comparison was between two *estimators* on one
 dataset, which is the wrong comparison — the practitioner's question is between two
 *designs* at fixed budget. The corrected experiment reversed the finding.
-
-### 4.6 The error shrinks with success rate but never disappears
-
-Section 4.1 measured coverage at one operating point. Because the dominant term scales
-as `T²·p(1−p)` and `T ~ 1/p`, both factors shrink as evaluations get easier — so the
-naive omission should matter less at high success rates. Sweeping the success rate
-locates how much less:
-
-| Success rate | Naive coverage | Delta coverage | Success-rate share of variance | Correct SE vs naive | MDE |
-|---|---|---|---|---|---|
-| 10% | **15%** | 93% | 88% | 10.40× | 128% |
-| 20% | 22% | 92% | 78% | 6.47× | 80% |
-| 30% | 33% | 94% | 69% | 4.70× | 63% |
-| 50% | 39% | 92% | 51% | 3.08× | 46% |
-| 70% | 58% | 93% | 36% | 2.27× | 37% |
-| 85% | 64% | 89% | 26% | 1.86× | 28% |
-| 95% | **68%** | 88% | 20% | 1.59× | 21% |
-
-**There is no threshold above which the naive interval becomes acceptable.** It
-improves monotonically and still reaches only 68% coverage at a 95% success rate — the
-easiest regime that exists. The correction is not situational.
-
-The second consequence is larger. **The minimum detectable effect falls from 128% to
-21% purely as a function of success rate.** At 95% success an evaluation can resolve
-the 10–40% improvements practitioners actually report; at 10% success it cannot resolve
-anything short of a doubling.
-
-> Difficulty and precision are coupled through the same denominator. Making a benchmark
-> harder does not merely lower the scores — it destroys the ability to measure changes
-> to them.
-
-This also explains why Stage 0's real-data MDEs are so large: the study analysed runs
-at 16–31% success rates, which sits at the punishing end of this curve.
-
-### 4.7 A second corpus confirms the mechanism
-
-§4.6 is simulation. The same study provides an empirical test at the opposite end of
-the curve: its M2 arm ran the identical suite on Llama-3.3-70B at a **94% success rate**
-against M1's 31%.
-
-| | M1 · Qwen2.5-3B | M2 · Llama-3.3-70B |
-|---|---|---|
-| Success rate | ~31% | ~94% |
-| Success-rate share of variance | **81%** | **16%** |
-| Covariance share | +7% | +25% |
-| Token share | 6–17% | 31–100% |
-| Naive interval too narrow by | **81%** | **44%** |
-| MDE (as measured) | 121–222% | 87–197% |
-
-The simulation predicted a success-rate share of 69% at p = 30% and 20% at p = 95%. The
-observed values are 81% and 16%. The mechanism transfers.
-
-**The composition inverts, but the error does not disappear.** At low success rates the
-success-rate term dominates; at high rates token variance and covariance do. What the
-naive estimator omits predicts how wrong it is almost exactly:
-
-| | Omitted variance | Interval too narrow by |
-|---|---|---|
-| M1 | 7% + 81% = **88%** | 81% |
-| M2 | 25% + 16% = **41%** | 44% |
-
-**The MDE comparison is confounded by sample size** and should not be read directly: M2
-has 13 attempts per cell against M1's 80, a √(80/13) = 2.48× penalty. Adjusted to equal
-n, M2's MDE would be roughly **35–79%** against M1's 121–222% — so a high success rate
-roughly halves to thirds the detectable effect, consistent with §4.6.
-
-**A degenerate cell completes the argument.** In M2's S1B1L1 every attempt succeeded
-(12/12), so the success-rate variance is exactly zero and the covariance vanishes: the
-ratio estimator collapses to a simple mean and the naive standard error equals the delta
-standard error exactly (303 = 303). Yet the cluster bootstrap still returns 407 — **26%
-wider**. Even when both ratio corrections vanish, clustering remains. There are three
-things the naive treatment ignores, and at no operating point are all three absent.
-
-### 4.8 The MDE formula is itself optimistic
-
-Every minimum detectable effect above comes from the closed form
-`MDE = (z_α + z_β)·√2·SE / T`, which assumes the estimator is approximately normal. For
-a ratio whose denominator is a small count of successes, that assumption is doing real
-work. §7 flagged it as a limitation; this measures it.
-
-Ground truth here is the definition of power rather than another formula: plant a true
-effect, simulate the entire procedure, and count how often the interval actually
-excludes zero.
-
-| Success rate | Successes per cell | Closed form | Measured by simulation | Ratio |
-|---|---|---|---|---|
-| 10% | 8 | 162% | ≥600% | ≥3.7× |
-| 20% | 16 | 102% | **419%** | **4.13×** |
-| 30% | 24 | 84% | 198% | 2.35× |
-| 50% | 40 | 63% | 106% | 1.66× |
-| 30% (13 tasks) | 8 | 187% | ≥600% | ≥3.2× |
-| 15% (13 tasks) | 4 | 284% | ≥600% | ≥2.1× |
-
-**The closed form is optimistic everywhere, and worst where successes are scarce.** Rows
-marked ≥ never reached 80% power at any effect size searched, so they are lower bounds.
-
-This cuts in the conservative direction: **every MDE reported in §4.3, §4.6 and §5
-understates how hard detection really is.** At the operating point closest to the real
-data (30% success, 40 tasks) the true detectable effect is 2.35× the stated one, which
-would move the GSM8K range from 121–222% to roughly 285–520%.
-
-The consequence for §4.4 is that the re-audit was too kind. Prism's −109.7% was reported
-as sitting just below a 121% threshold; against a simulated threshold it is not close to
-detectable at all.
-
-The exact multipliers belong to this generating process and should not be applied
-mechanically to other suites. What transfers is the direction and the reason: a ratio
-with a small random denominator is skewed, and a symmetric normal interval built on it
-is too short. Where successes per cell fall below roughly 20, the closed form should be
-treated as a lower bound on the difficulty and the simulation run instead.
 
 ---
 
@@ -414,104 +308,6 @@ pp with an interval spanning zero once all 640 attempts were used. That is the c
 underpowered overestimate, occurring in a study whose entire subject is underpowered
 estimates. It is reported here rather than quietly replaced.
 
-### 5.4 Judge quality changes the answer entirely
-
-§5.1–5.3 used a local 3B judge. The limits section flagged the obvious question: is a
-73% false-negative rate a property of LLM judging, or of a *small* LLM judging? Running
-the same protocol with Llama-3.3-70B on 448 attempts answers it.
-
-| | Qwen2.5-3B | Llama-3.3-70B |
-|---|---|---|
-| False-negative rate | **73.0%** (111/152) | **2.1%** (2/95) |
-| False-positive rate | 0.8% (4/488) | 0.9% (3/352) |
-| Error symmetry | one-directional | roughly symmetric |
-| Successes preserved | 152 → 45 (**−70%**) | 95 → 96 (**+1%**) |
-| Judge variance at T=0 | 0% | 0% |
-
-**The claim in §5.2 was too broad.** "An LLM judge halves your statistical power" holds
-for a weak judge and not for a competent one. The 70B judge is 35× more accurate, and —
-more importantly — its errors are *symmetric*: 2.1% against 0.9%, so they largely cancel
-in the success count rather than draining it. Since the power loss is caused by the
-denominator shrinking, symmetric error is nearly free even at the same nominal rate.
-
-The corrected finding:
-
-> A **weak** judge halves your statistical power, because its error is one-directional
-> and eats the denominator. A **competent** judge costs almost nothing. Judge quality
-> is not a matter of degree here — it changes whether the measurement survives.
-
-Two caveats on this comparison. The runs used different sample sizes (640 versus 448
-attempts, the latter capped by free-tier quota), so the false-negative *rates* are
-comparable but the MDE figures are not directly. And the 70B run's headline contrast
-moved 14 percentage points — a shift driven by a **single** false positive taking one
-cell from 10 judged successes to 11. At that cell size one verdict is a 10% swing in the
-denominator, so the movement is noise rather than bias. The analysis script originally
-flagged it as material; it now scales that alarm to the smallest success count involved.
-
-### 5.5 Most of the judge error was a harness defect
-
-§5.4 attributed the 3B judge's 73% false-negative rate to model weakness. Inspecting
-what the judge was actually shown undermines that. On every successful GSM8K attempt it
-compared:
-
-```
-Reference answer: 7425.0
-Submitted answer: 7425
-```
-
-`expected` is stored as a float; `got` is the model's raw string. A small model asked
-"is the submitted answer correct?" sees two strings that differ and says no. That is a
-presentation defect in this harness, not a reasoning failure in the model.
-
-An ablation over four variants — same 60 successes and 60 failures, same model, same
-temperature — measures how much:
-
-| Variant | False-negative rate |
-|---|---|
-| **baseline** (what §5.1 ran) | 73.3% |
-| **normalised** (`7425.0` rendered as `7425`) | **26.7%** |
-| **tolerant** (baseline, prompt permits formatting differences) | 75.0% |
-| **bare** (no question text, pure numeric comparison) | 73.3% |
-
-**64% of the false-negative rate was my harness.** The two negative results matter as
-much as the positive one: instructing the model to ignore formatting did nothing (75.0%,
-marginally worse), and removing the question text did nothing (73.3%). **A weak model
-cannot be prompted out of a presentation defect — only the data presentation fixes it.**
-
-**And the defect only harms the weak model.** Running the same ablation on the 70B judge
-(95 successes, baseline and normalised variants):
-
-| Judge | baseline FN | normalised FN | share attributable to presentation |
-|---|---|---|---|
-| Qwen2.5-3B | 73.3% | 26.7% | **64%** |
-| Llama-3.3-70B | 4.2% | 5.3% | **0%** |
-
-Normalising changes nothing for the 70B because it was never confused by `7425.0` versus
-`7425`. This answers the question §5.4's limitation left open: the 70B's accuracy is
-genuine judging skill, not tolerance for a badly-posed comparison. The two effects
-compound rather than substitute — a weak judge is both less accurate *and* more fragile
-to how the comparison is presented.
-
-The residual is real and model-dependent, and it revises the power cost accordingly:
-
-| | FN rate | Successes retained | MDE multiplier |
-|---|---|---|---|
-| Baseline presentation, 3B judge | 73.0% | 152 → 41 | **×1.92** |
-| Normalised presentation, 3B judge | 26.7% | 152 → 111 | ×1.17 |
-| 70B judge | 2.1% | 152 → 149 | ×1.01 |
-
-**The final form of the Stage 1 finding:**
-
-> Judge error costs statistical power through the denominator, but most of what looked
-> like judge error here was a defect in how the comparison was posed. Corrected, a weak
-> judge costs roughly 17% in minimum detectable effect and a strong one costs nothing.
-> The original 2× figure measured this harness, not LLM judging.
-
-This is the third revision of the same finding — 2× for LLM judges, then 2× for *weak*
-judges only, then ×1.17 once the harness defect was removed. Each revision came from
-more data or closer inspection, and each made the claim smaller. That pattern is the
-subject of this report, and it applies to this report.
-
 ---
 
 ## 6. What to do with this
@@ -532,63 +328,22 @@ point estimate implies a precision that does not exist.
 **Prefer a within-task design** — and if you have one, allocate budget between tasks
 and replicates however is convenient.
 
-**Inspect what your judge is actually shown before blaming the model.** Two-thirds of
-the false-negative rate here came from comparing `7425.0` against `7425`. Normalise
-values on both sides of the comparison.
-
-**Do not expect a prompt instruction to fix it.** Telling a weak model that formatting
-differences do not matter changed nothing; only changing the presentation did.
-
-**Prefer a strong judge, and check error symmetry.** One-directional error eats the
-denominator; symmetric error largely cancels. After correcting presentation, a 3B judge
-costs ~17% in MDE and a 70B judge costs nothing.
+**If you score with an LLM judge, expect to lose most of your statistical power.** A
+73% false-negative rate doubled the MDE here. Budget for it, or use an objective judge
+wherever the task admits one.
 
 **Do not repeat-run a judge at temperature 0.** It is deterministic; the repetitions
 measure nothing.
-
-### How big does your evaluation need to be?
-
-Inverting the analysis gives the question worth asking before spending compute rather
-than after. Tasks required to detect a given change in cost per success, at 2 attempts
-per task per condition and 80% power:
-
-| Success rate | detect 10% | 20% | 30% | 50% | 100% |
-|---|---|---|---|---|---|
-| 10% | >4000 | 2,521 | 1,128 | 409 | 103 |
-| 30% | >4000 | 880 | 395 | 140 | 38 |
-| 50% | 2,031 | 508 | 226 | 83 | 22 |
-| 70% | 1,224 | 305 | 137 | 51 | 13 |
-| 95% | 362 | **91** | 43 | 13 | 5 |
-
-Read a column downward and the same claim gets **28× cheaper** as the success rate rises
-from 10% to 95%. Read a row rightward and a coarser claim gets cheaper just as fast.
-
-The uncomfortable comparison: agentic cost-efficiency improvements are routinely
-published in the **10–40%** range, and typical agentic suites hold **100–500 tasks**. At a
-30% success rate, a 30% claim needs 395 tasks, a 20% claim needs 880, and a 10% claim is
-out of reach at any suite size a research team would build.
-
-`>4000` is a real answer rather than a missing one: it says the claim cannot be
-supported, not that more data would help.
-
-For calibration, the study analysed here used 40 tasks at a ~31% success rate. The table
-puts that at roughly a 100% detectable effect; the measured value was 121–222%. The
-planner is the optimistic bound.
-
-```bash
-python3 analysis/plan_eval.py --target 0.20 --success-rate 0.30
-python3 analysis/plan_eval.py --table
-```
 
 ---
 
 ## 7. Limits
 
-**Two judges, four prompt variants.** The model-size and prompt-sensitivity questions
-this limitation originally raised are answered in §5.4 and §5.5. The presentation-robustness question is
-settled in §5.5: the 70B is unaffected by normalisation, so its accuracy is judging
-skill. What remains untested is whether the 3B judge's residual 26.7% falls further
-under presentations not tried here.
+**The judge arm uses one judge and one prompt.** Judge behaviour is prompt-sensitive
+and model-sensitive; no ablation was run. The 73% false-negative rate is a property of
+this 3B judge with this prompt, not of LLM judging in general. A stronger judge would
+presumably err less; whether it would err *symmetrically* is untested, and the
+asymmetry is what drives the power loss.
 
 **Low power in §5.3.** With 152 successes the factor tests could not resolve differences
 below roughly 25 pp. Absence of evidence there is not evidence of absence.
@@ -622,12 +377,6 @@ python3 analysis/decompose_run.py results/<run>.jsonl
 
 # paired vs independent design comparison
 python3 analysis/design_sweep.py
-
-# how many tasks would you need?
-python3 analysis/plan_eval.py --table
-
-# is the MDE formula trustworthy at your success rate?
-python3 analysis/mde_simulation.py
 
 # judge arm (the only part needing a model backend)
 python3 analysis/judge_arm.py RESULTS.jsonl SUITE.json --model mlx --k 1
