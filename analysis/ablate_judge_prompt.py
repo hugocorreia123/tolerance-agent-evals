@@ -37,7 +37,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from analysis.judge_arm import MockJudge, MLXJudge, load_attempts, load_questions
+from analysis.judge_arm import (MockJudge, MLXJudge, GroqJudge,
+                                load_attempts, load_questions)
 
 
 def fmt(v):
@@ -92,22 +93,18 @@ class VariantJudge:
             got=got)
         if isinstance(self.backend, MockJudge):
             return self.backend.verdict(question, e, got, truth)
-        # reuse the backend's generation path with our prompt
-        msgs = [{"role": "user", "content": prompt}]
-        text = self.backend.tokenizer.apply_chat_template(
-            msgs, add_generation_prompt=True, tokenize=False)
-        out = self.backend._generate(self.backend.model, self.backend.tokenizer,
-                                     prompt=text, max_tokens=6, verbose=False)
-        up = out.strip().upper()
-        return True if up.startswith("YES") else (
-            False if up.startswith("NO") else None)
+        return self.backend.complete(prompt)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("results_file")
     ap.add_argument("suite_file")
-    ap.add_argument("--model", default="mock", choices=["mock", "mlx"])
+    ap.add_argument("--model", default="mock",
+                    choices=["mock", "mlx", "groq"])
+    ap.add_argument("--variants", default=None,
+                    help="comma-separated subset, e.g. baseline,normalised "
+                         "— use this to stay inside a hosted quota")
     ap.add_argument("--model-id",
                     default="mlx-community/Qwen2.5-3B-Instruct-4bit")
     ap.add_argument("--n-pos", type=int, default=60,
@@ -127,15 +124,30 @@ def main():
     neg = rng.sample(neg, min(args.n_neg, len(neg)))
     sample = pos + neg
 
-    backend = (MockJudge() if args.model == "mock"
-               else MLXJudge(args.model_id, 0.0))
+    if args.model == "mock":
+        backend = MockJudge()
+    elif args.model == "mlx":
+        backend = MLXJudge(args.model_id, 0.0)
+    else:
+        gid = (args.model_id if "mlx-community" not in args.model_id
+               else "llama-3.3-70b-versatile")
+        backend = GroqJudge(gid, 0.0)
+
+    variants = VARIANTS
+    if args.variants:
+        want = [v.strip() for v in args.variants.split(",")]
+        missing = [v for v in want if v not in VARIANTS]
+        if missing:
+            print(f"unknown variant(s): {missing}")
+            sys.exit(1)
+        variants = {k: VARIANTS[k] for k in want}
     print(f"sample : {len(pos)} successes + {len(neg)} failures = "
           f"{len(sample)} attempts")
     print(f"judge  : {getattr(backend, 'name', args.model)}")
-    print(f"calls  : {len(sample) * len(VARIANTS)}\n")
+    print(f"calls  : {len(sample) * len(variants)}\n")
 
     results = {}
-    for vname, spec in VARIANTS.items():
+    for vname, spec in variants.items():
         j = VariantJudge(backend, spec)
         fn = fp = unparsed = 0
         for i, a in enumerate(sample, 1):
@@ -161,6 +173,8 @@ def main():
               "cannot be measured")
         return
     print("\n" + "=" * 62)
+    if "baseline" not in results:
+        return
     base_fn = results["baseline"][0] / len(pos)
     best = min(results, key=lambda k: results[k][0])
     best_fn = results[best][0] / len(pos)

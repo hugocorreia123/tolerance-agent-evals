@@ -68,6 +68,18 @@ class MLXJudge:
         self.name = model_id
         self.temperature = temperature
 
+    def complete(self, prompt):
+        """Raw-prompt entry point, so callers (e.g. the prompt ablation)
+        can drive this backend with a template of their own."""
+        msgs = [{"role": "user", "content": prompt}]
+        text = self.tokenizer.apply_chat_template(
+            msgs, add_generation_prompt=True, tokenize=False)
+        out = self._generate(self.model, self.tokenizer, prompt=text,
+                             max_tokens=6, verbose=False)
+        up = out.strip().upper()
+        return True if up.startswith("YES") else (
+            False if up.startswith("NO") else None)
+
     def verdict(self, question, expected, got, truth=None):
         prompt = JUDGE_PROMPT.format(question=question, expected=expected,
                                      got=got)
@@ -119,9 +131,13 @@ class GroqJudge:
             time.sleep(max(1.0, 60 - (now - oldest) + 0.5))
 
     def verdict(self, question, expected, got, truth=None):
-        from groq import RateLimitError
         prompt = JUDGE_PROMPT.format(question=question, expected=expected,
                                      got=got)
+        return self.complete(prompt)
+
+    def complete(self, prompt):
+        """Raw-prompt entry point — same pacing and abort behaviour."""
+        from groq import RateLimitError
         self._pace(len(prompt) // 3 + 8)
         for attempt in range(4):
             try:

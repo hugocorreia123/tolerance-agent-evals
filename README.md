@@ -74,7 +74,9 @@ conceded it was "underpowered for its own primary metric." This puts a number on
 **4. Judge error is mostly a harness defect — and cannot be prompted away.**
 The 3B judge's 73% false-negative rate came largely from being shown `7425.0` against
 `7425`. Normalising the format cut it to **26.7%**; *telling* the model to ignore
-formatting changed nothing (75.0%). Corrected, a weak judge costs ~17% in minimum
+formatting changed nothing (75.0%). The same defect costs a 70B judge nothing at all
+(4.2% → 5.3%) — weak judges are both less accurate and more fragile to how the
+comparison is posed. Corrected, a weak judge costs ~17% in minimum
 detectable effect and a 70B judge costs nothing — against the 2× originally reported.
 
 **5. A weak judge halves your statistical power — a strong one costs nothing.**

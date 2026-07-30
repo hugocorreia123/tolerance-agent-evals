@@ -478,6 +478,20 @@ much as the positive one: instructing the model to ignore formatting did nothing
 marginally worse), and removing the question text did nothing (73.3%). **A weak model
 cannot be prompted out of a presentation defect — only the data presentation fixes it.**
 
+**And the defect only harms the weak model.** Running the same ablation on the 70B judge
+(95 successes, baseline and normalised variants):
+
+| Judge | baseline FN | normalised FN | share attributable to presentation |
+|---|---|---|---|
+| Qwen2.5-3B | 73.3% | 26.7% | **64%** |
+| Llama-3.3-70B | 4.2% | 5.3% | **0%** |
+
+Normalising changes nothing for the 70B because it was never confused by `7425.0` versus
+`7425`. This answers the question §5.4's limitation left open: the 70B's accuracy is
+genuine judging skill, not tolerance for a badly-posed comparison. The two effects
+compound rather than substitute — a weak judge is both less accurate *and* more fragile
+to how the comparison is presented.
+
 The residual is real and model-dependent, and it revises the power cost accordingly:
 
 | | FN rate | Successes retained | MDE multiplier |
@@ -571,10 +585,10 @@ python3 analysis/plan_eval.py --table
 ## 7. Limits
 
 **Two judges, four prompt variants.** The model-size and prompt-sensitivity questions
-this limitation originally raised are answered in §5.4 and §5.5. What remains untested:
-whether the residual 26.7% for the 3B judge falls further under presentations not tried
-here, and whether the 70B judge's 2.1% is itself partly presentation-robustness rather
-than judging skill — it may simply normalise `7425.0` silently where the 3B cannot.
+this limitation originally raised are answered in §5.4 and §5.5. The presentation-robustness question is
+settled in §5.5: the 70B is unaffected by normalisation, so its accuracy is judging
+skill. What remains untested is whether the 3B judge's residual 26.7% falls further
+under presentations not tried here.
 
 **Low power in §5.3.** With 152 successes the factor tests could not resolve differences
 below roughly 25 pp. Absence of evidence there is not evidence of absence.
