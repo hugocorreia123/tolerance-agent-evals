@@ -97,6 +97,10 @@ for replicates freely; independent designs must maximise task count.
 
 ---
 
+<p align="center">
+  <img src="docs/tolerance_variance.png" width="100%">
+</p>
+
 ## The method
 
 For *n* attempts with tokens *tᵢ* and outcomes *sᵢ* ∈ {0,1}, the metric is
