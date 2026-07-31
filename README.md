@@ -178,3 +178,16 @@ reversed the finding.
 condition: a 27 percentage-point gap at p = 0.056. Running all 640 attempts shrank it to
 13 points with an interval spanning zero. The larger sample corrected the smaller one,
 which is exactly what this project argues will happen — and it happened here.
+
+---
+
+## Part of a series
+
+Three studies applying the same discipline to questions practitioners answer by
+folklore:
+
+- [**Prism**](https://github.com/hugocorreia123/prism-token-taxes) — do LLM token-saving techniques actually save money?
+- [**Tolerance**](https://github.com/hugocorreia123/tolerance-agent-evals) — could your evaluation detect the improvement you claim? (It audits Prism, and finds Prism's headline sits below its own detection threshold.)
+- [**Tripwire**](https://github.com/hugocorreia123/tripwire-drift-economics) — is a drift alarm worth more than a cron job?
+
+Each reports what it found, including when that was nothing.
