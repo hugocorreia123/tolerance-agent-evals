@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="700" viewBox="0 0 1600 700">
+<defs><marker id="h-047857" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#047857"/></marker><marker id="h-0E7490" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#0E7490"/></marker><marker id="h-4F46E5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#4F46E5"/></marker><marker id="h-B45309" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#B45309"/></marker><marker id="h-BE123C" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#BE123C"/></marker><marker id="h-475569" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/></marker><marker id="h-64748B" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748B"/></marker></defs>
+<rect width="1600" height="700" rx="18" fill="#FCFDFE" stroke="#E2E8F0" stroke-width="2"/>
+<text x="800.0" y="52.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="27" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="middle">Why cost-per-success is not a mean</text>
+<text x="800.0" y="79.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" font-style="normal" fill="#64748B" text-anchor="middle">both parts of the ratio are random — the usual treatment propagates only one of them</text>
+<rect x="40" y="108" width="400" height="470" rx="16" fill="#F1F5F9" stroke="#475569" stroke-opacity="0.28" stroke-width="1.5"/>
+<text x="240.0" y="138.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" font-style="normal" fill="#475569" text-anchor="middle" letter-spacing="1.6">1 · THE METRIC</text>
+<text x="240.0" y="200.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="17" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="middle">all-in tokens</text>
+<line x1="110" y1="220" x2="370" y2="220" stroke="#0F172A" stroke-width="2.5"/>
+<text x="240.0" y="254.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="17" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="middle">successful tasks</text>
+<rect x="78" y="298" width="324" height="62" rx="10" fill="#FFFFFF" stroke="#0E7490" stroke-width="1.7"/>
+<text x="240.0" y="325.5" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="middle">numerator: random</text>
+<text x="240.0" y="342.5" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" font-style="normal" fill="#64748B" text-anchor="middle">tokens vary run to run</text>
+<rect x="78" y="382" width="324" height="62" rx="10" fill="#FFFBEB" stroke="#B45309" stroke-width="2.4"/>
+<text x="240.0" y="409.5" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="middle">denominator: also random</text>
+<text x="240.0" y="426.5" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" font-style="normal" fill="#64748B" text-anchor="middle">a Bernoulli count, and a small one</text>
+<text x="240.0" y="488.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" font-style="italic" fill="#64748B" text-anchor="middle">Treating the denominator as fixed</text>
+<text x="240.0" y="508.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" font-style="italic" fill="#64748B" text-anchor="middle">is the entire error.</text>
+<rect x="480" y="108" width="620" height="470" rx="16" fill="#EEF2FF" stroke="#4F46E5" stroke-opacity="0.28" stroke-width="1.5"/>
+<text x="790.0" y="138.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" font-style="normal" fill="#4F46E5" text-anchor="middle" letter-spacing="1.6">2 · ITS VARIANCE HAS THREE PARTS</text>
+<text x="790.0" y="174.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" font-style="italic" fill="#64748B" text-anchor="middle">measured on 848 real agentic runs, GSM8K arm</text>
+<rect x="640" y="204" width="330" height="46" rx="6" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.4"/>
+<rect x="640" y="204" width="56.1" height="46" rx="6" fill="#0E7490" fill-opacity="0.85"/>
+<text x="628.0" y="232.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="end">token variance</text>
+<text x="982.0" y="232.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" font-style="normal" fill="#0E7490" text-anchor="start">6–17%</text>
+<text x="790.0" y="268.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" font-style="italic" fill="#0E7490" text-anchor="middle">the only part the naive interval keeps</text>
+<rect x="640" y="298" width="330" height="46" rx="6" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.4"/>
+<rect x="640" y="298" width="23.1" height="46" rx="6" fill="#B45309" fill-opacity="0.35"/>
+<text x="628.0" y="326.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="end">covariance</text>
+<text x="982.0" y="326.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" font-style="normal" fill="#B45309" text-anchor="start">+7%</text>
+<line x1="644" y1="321.0" x2="966" y2="321.0" stroke="#BE123C" stroke-width="2.2" stroke-dasharray="5 4"/>
+<text x="790.0" y="362.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" font-style="italic" fill="#64748B" text-anchor="middle">failures cost MORE than successes, so this inflates</text>
+<rect x="640" y="392" width="330" height="46" rx="6" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.4"/>
+<rect x="640" y="392" width="267.3" height="46" rx="6" fill="#BE123C" fill-opacity="0.35"/>
+<text x="628.0" y="420.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="end">success rate</text>
+<text x="982.0" y="420.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" font-style="normal" fill="#BE123C" text-anchor="start">81%</text>
+<line x1="644" y1="415.0" x2="966" y2="415.0" stroke="#BE123C" stroke-width="2.2" stroke-dasharray="5 4"/>
+<text x="790.0" y="456.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" font-style="italic" fill="#BE123C" text-anchor="middle">the dominant term — omitted entirely</text>
+<text x="790.0" y="520.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" font-style="italic" fill="#64748B" text-anchor="middle">dashed = discarded by the naive estimator</text>
+<rect x="1140" y="108" width="420" height="470" rx="16" fill="#FFF1F2" stroke="#BE123C" stroke-opacity="0.28" stroke-width="1.5"/>
+<text x="1350.0" y="138.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" font-style="normal" fill="#BE123C" text-anchor="middle" letter-spacing="1.6">3 · THE CONSEQUENCE</text>
+<rect x="1180" y="200" width="340" height="96" rx="10" fill="#FFF1F2" stroke="#BE123C" stroke-width="2.4"/>
+<text x="1350.0" y="236.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="middle">naive 95% interval</text>
+<text x="1350.0" y="253.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" font-style="normal" fill="#64748B" text-anchor="middle"></text>
+<text x="1350.0" y="270.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" font-style="normal" fill="#64748B" text-anchor="middle">contains the truth 39% of the time</text>
+<line x1="1350.0" y1="308.0" x2="1350.0" y2="344.0" stroke="#64748B" stroke-width="2.4" stroke-linecap="round" marker-end="url(#h-64748B)"/>
+<rect x="1180" y="352" width="340" height="96" rx="10" fill="#ECFDF5" stroke="#047857" stroke-width="2.4"/>
+<text x="1350.0" y="388.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" font-style="normal" fill="#0F172A" text-anchor="middle">ratio-aware interval</text>
+<text x="1350.0" y="405.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" font-style="normal" fill="#64748B" text-anchor="middle"></text>
+<text x="1350.0" y="422.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" font-style="normal" fill="#64748B" text-anchor="middle">93.7% delta · 94.3% bootstrap</text>
+<text x="1350.0" y="494.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" font-style="italic" fill="#64748B" text-anchor="middle">validated against 300 datasets</text>
+<text x="1350.0" y="514.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" font-style="italic" fill="#64748B" text-anchor="middle">with a known population value</text>
+<text x="800.0" y="676.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" font-style="italic" fill="#64748B" text-anchor="middle">a nominal 95% interval that is right 39% of the time is wrong more often than it is right</text>
+</svg>
